@@ -2,13 +2,50 @@
 
 arg_list = argv();
 wavFile=[arg_list{1} ".wav"]
-csvFile=[arg_list{1} "-sampling.csv"]
-pngFile=[arg_list{1} ".png"]
+csvFile=[arg_list{1} "-sampling.csv"];
+pngFile=[arg_list{1} ".png"];
+
+[status, m_param] = system(["iconv -f utf-16 -t ascii -c oto.ini |grep ^" wavFile "|tail -1|awk -F, '{print $2\",\"$3\",\"$4\",\"$5\",\"$6}'"]);
+
+#testCMD=[str2num(m_param)];
+#testCMD=[m_param]
+
+[m_val, count, errmsg] = sscanf(m_param, "%d,%d,%d,%d,%d");
+
+if(count == 5)
+  m_offs=m_val(1)
+  m_conc=m_val(1)+m_val(2)
+  m_vowl=m_val(1)-m_val(3)
+  m_prev=m_val(1)+m_val(4)
+  m_olap=m_val(1)-m_val(5)
+
+  m_offs=(m_val(1))/1000;
+  m_conc=(m_val(1)+m_val(2))/1000;
+  m_vowl=(m_val(1)-m_val(3))/1000;
+  m_prev=(m_val(1)+m_val(4))/1000;
+  m_olap=(m_val(1)-m_val(5))/1000;
+endif
+
+#testCMD=[m_offs]
+#system(["echo " myCMD]);
 
 [y,fs] = wavread(wavFile);
 mono=y(:,1);
-subplot(6,1,1),plot(( 1:length(mono)) /fs, mono );
-title("Waveform");
+subplot(3,1,1);
+
+hold ("on");
+plot(( 1:length(mono)) /fs, mono );
+title(["Waveform: " wavFile]);
+
+if(count==5)
+  plot([m_offs m_offs],[min(mono) max(mono)],'color',[0.5 0.7 0.5]);
+  plot([m_conc m_conc],[min(mono) max(mono)],'color',[0.9 0.5 0.5]);
+  plot([m_vowl m_vowl],[min(mono) max(mono)],'color',[0.9 0.5 0.5]);
+  plot([m_prev m_prev],[min(mono) max(mono)],'color',[0.9 0.5 0.5]);
+  plot([m_olap m_olap],[min(mono)/2 max(mono)/2],'color',[0.9 0.5 0.5]);
+endif
+
+hold ("off");
 
 data = csvread(csvFile);
 timestamp = data(:,1);
@@ -24,20 +61,50 @@ ste_d = data(:,10);
 
 #subplot(2,1,2),plot(( 1:length(d)) / fs, d );
 
-subplot(6,1,2),plot(timestamp , zcr );
+subplot(3,1,2);
+hold ("on");
+set (gca (), "ylim", [1.1*min(zcr_d), 1.1*max(zcr)]);
+plot(timestamp , zcr);
 title("Zero-Cross Rate");
 
-subplot(6,1,3),plot(timestamp , zcr_d );
-title("Zero-Cross Rate Diff.");
+plot(timestamp , zcr_d, "4" );
+#title("Zero-Cross Rate Diff.");
 
-subplot(6,1,4),plot( timestamp , variance );
+plot([0 max(timestamp)],[0 0],'color',[0.5 0.5 0.5])
+
+if(count==5)
+  plot([m_offs m_offs],[min(zcr_d) max(zcr)],'color',[0.5 0.7 0.5]);
+  plot([m_conc m_conc],[min(zcr_d) max(zcr)],'color',[0.9 0.5 0.5]);
+  plot([m_vowl m_vowl],[min(zcr_d) max(zcr)],'color',[0.9 0.5 0.5]);
+  plot([m_prev m_prev],[min(zcr_d) max(zcr)],'color',[0.9 0.5 0.5]);
+  plot([m_olap m_olap],[min(zcr_d)/2 max(zcr)/2],'color',[0.9 0.5 0.5]);
+endif
+
+hold ("off");
+
+subplot(3,1,3);
+hold ("on");
+set (gca (), "ylim", [1.1*min(var_d), 1.1*max(variance)]);
+plot( timestamp , variance );
 title("Spectrum Variance");
 
-subplot(6,1,5),plot( timestamp , var_d );
-title("Spectrum Variance Diff.");
+plot( timestamp , var_d, "4" );
+#title("Spectrum Variance Diff.");
 
-subplot(6,1,6),plot( timestamp , pitch );
-title("Pitch Score");
+plot([0 max(timestamp)],[0 0],'color',[0.5 0.5 0.5])
+
+if(count==5)
+  plot([m_offs m_offs],[min(var_d) max(variance)],'color',[0.5 0.7 0.5]);
+  plot([m_conc m_conc],[min(var_d) max(variance)],'color',[0.9 0.5 0.5]);
+  plot([m_vowl m_vowl],[min(var_d) max(variance)],'color',[0.9 0.5 0.5]);
+  plot([m_prev m_prev],[min(var_d) max(variance)],'color',[0.9 0.5 0.5]);
+  plot([m_olap m_olap],[min(var_d) max(variance)/2],'color',[0.9 0.5 0.5]);
+endif
+
+hold ("off");
+
+#subplot(6,1,6),plot( timestamp , pitch );
+#title("Pitch Score");
 
 print(pngFile,"-dpng");
 
