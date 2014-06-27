@@ -6,6 +6,7 @@ csv format
 from pymir import AudioFile
 from pymir import Pitch
 import math
+import numpy
 import csv
 import sys
 import os
@@ -34,33 +35,55 @@ def writeCsv(sampling,frames,output):
     prev_var = 0.;
     prev_rms = 0.;
     prev_ste = 0.;
+    prev_ps  = 0.;
+
+    curr_zcr = 0.;
+    curr_var = 0.;
+    curr_rms = 0.;
+    curr_ste = 0.;
+    curr_ps = 0.;
 
     for i  in xrange(0,len(frames)):
         windowSize = len(frames[i]) - 1
         timestamp = "%0.3f" % (sampling[i] / float(freq))
         chord, score = Pitch.getChord(frames[i].spectrum().chroma())
 
-        diff_zcr = frames[i].zcr() - prev_zcr;
-        diff_var = frames[i].spectrum().variance() - prev_var;
-        diff_rms = frames[i].rms() - prev_rms;
-        diff_ste = frames[i].energy(windowSize)[0] - prev_ste;
+        curr_zcr = frames[i].zcr();
+        curr_var = frames[i].spectrum().variance();
+        curr_rms = frames[i].rms();
+        curr_ste = frames[i].energy(windowSize)[0];
+        curr_ps  = score;
+
+#        maxFreqIdx = numpy.argmax(frames[i].spectrum());
+#        maxFreq = maxFreqIdx * (frames[i].spectrum().sampleRate / 2.0) / \
+#                    len(frames[i].spectrum());
+#
+#        if maxFreq > 750 : curr_ps = 0;
+#        if maxFreq < 350 : curr_ps = 0;
+        if curr_var < 0.3 : curr_zcr = 0; curr_ps = 0;
+
+        diff_zcr = curr_zcr - prev_zcr;
+        diff_var = curr_var - prev_var;
+        diff_rms = curr_rms - prev_rms;
+        diff_ste = curr_ste - prev_ste;
 
         row = [timestamp,
-               frames[i].zcr(),
-               frames[i].spectrum().variance(),
-               frames[i].rms(),
-               frames[i].energy(windowSize)[0],
-               score,
+               curr_zcr,
+               curr_var,
+               curr_rms,
+               curr_ste,
+               curr_ps,
                diff_zcr,
                diff_var,
                diff_rms,
                diff_ste];
         writer.writerow(row);
 
-        prev_zcr = frames[i].zcr();
-        prev_var = frames[i].spectrum().variance();
-        prev_rms = frames[i].rms();
-        prev_ste = frames[i].energy(windowSize)[0];
+        prev_zcr = curr_zcr;
+        prev_var = curr_var;
+        prev_rms = curr_rms;
+        prev_ste = curr_ste;
+        prev_ps  = curr_ps;
 
 
     print "The result is written on %s" % output
@@ -72,7 +95,9 @@ except:
 	exit(0)
 
 #TODO read from configuration file
-frameSize = 882 # 20ms
+#frameSize = 882 # 20ms
+frameSize = 1323 # 30ms
+#frameSize = 2205 # 50ms
 freq = 44100
 
 token = os.path.basename(target).split(".")
