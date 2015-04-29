@@ -7,6 +7,13 @@ import shutil
 import codecs
 #import tempfile
 
+'''
+Usage:
+
+linne-validate oto_dir/oto.ini [filter]
+
+'''
+
 try:
 
   parm_t = ''
@@ -16,26 +23,30 @@ try:
 #  tmp_dir = tempfile.mkdtemp()
 #  print "Temp. dir.: ", tmp_dir
 
+  if len(sys.argv) <= 1:
+    print "Usage: "+sys.argv[0].split('/')[-1]+" oto_dir/oto.ini [fileter]\n"
+    sys.exit(0)
+
   oto_in = sys.argv[1]
-  oto_bak = oto_in+'.bbb'
   oto_dir = '/'.join(oto_in.split('/')[0:-1])
 
   if oto_dir == '': oto_dir = '.'
 
-#  os.rename(oto_in, oto_bak);
-#  if oto_in.split('/')[-1] == 'oto.ini' :
-  if os.path.exists(oto_dir+'/oto.ini') :
-    print "Error! The oto.ini file could be overwritten!!"
-#    sys.exit(1)
+#  if not os.path.exists(oto_dir+'/oto.ini') :
+  if not os.path.exists(oto_in) :
+    print "Error! The "+oto_in.split('/')[-1]+" does not exist!!"
+    sys.exit(-1)
 
 #  print "Check oto.ini", oto_dir
 #  if os.path.exists(oto_dir+'/oto.ini') :
 #    os.rename(oto_dir+'/oto.ini', oto_dir+'/oto.ini.ooo')
 
   f_in = codecs.open(oto_in, 'rb', encoding='UTF-16')
+  x_in = codecs.open('test-s.xvsq', 'rb', encoding='UTF-8')
+#  x_out = codecs.open('testing.xvsq', 'wb', encoding='UTF-8')
 
   for line in f_in:
-    if line[0]=='#' or line[0:2]=='//' or line.find('=') < 0 : continue
+    if line[0]=='#' or line[0:2]=='//' or line.find('=')<0 : continue
     if line[0]==';' : continue
 
     wavfile = line.split('.wav=')[0]
@@ -45,49 +56,37 @@ try:
 
     if len(sys.argv) >2 :
       search = sys.argv[2]
-#      if line.split('=')[-1].split(',')[0] == target :
       if line.find(sys.argv[2]) >= 0 :
-        target = line.split('=')[-1].split(',')[0]
-        parm_t = line.split('=')[0]+'=test'+line[line.find(','):]
-#      	print parm_t
+        target = line.split('=')[-1].split(',')[0]  # filtered lyric to test
 
     else:
-      if line[0]=='#' or line[0:2]=='//' or line.find('=') < 0:
-##        print line,
-        continue
+#      if line[0]==';' or line[0]=='#' or line[0:2]=='//' or line.find('=')<0:
+#        continue
 
-      target = line.split('=')[-1].split(',')[0]
-      parm_t = line.split('=')[0]+'=test'+line[line.find(','):]
-#      print parm_t,
+      target = line.split('=')[-1].split(',')[0]  # each lyric to test
+#      parm_t = line.split('=')[0]+'=test'+line[line.find(','):]
 
-    if parm_t != '':
-      print parm_t,
-#      f_out = codecs.open('oto_test.ini', 'w', 'UTF-16_BE')
-      f_out = open(oto_dir+'/oto.ini', 'wb')
-      f_out.write(('\n'+parm_t+'\n').encode('UTF-16', errors='ignore'))
-      f_out.close();
+    if target != '':
+      #print target,
 
-      command = 'java -jar xvsqexec.jar testing-s.xvsq wavtool-pl test1 '+oto_dir+'/testing.wav '+oto_dir+'/oto.ini'
+      x_out = open('testing.xvsq', 'wb')
+      xvsq_in = x_in.read().replace('TESTLYRIC', target)
+      x_out.write(xvsq_in.encode('UTF-8', errors='ignore'))
+      x_out.close();
+
+      command = 'java -jar xvsqexec.jar testing.xvsq wavtool-pl test1 '+oto_dir+'/testing.wav '+oto_dir+'/oto.ini'
+      #print command
       os.system(command+' 2>1 /dev/null')
-#      os.system('java -jar xvsqexec.jar testing-s.xvsq wavtool-pl test1 '+oto_dir+'/testing.wav '+oto_dir+'/oto.ini')
       songname = (wavfile+'_'+target+'-test.wav').replace(' ','_')
       shutil.copy(oto_dir+'/testing.wav', oto_dir+'/'+songname)
-#      print "Command: ", command+' 2>1 /dev/null'
       print "Song name: ", oto_dir+'/'+songname
 
-#      os.remove(oto_dir+'/oto.ini')
+#        os.system('mplayer -really-quiet testing.wav')
 
-#      os.system('mplayer -really-quiet testing.wav')
-#      os.system('iconv -f UTF-16 -t utf8 oto_test.ini')
-
-    parm_t = ''
+    target = ''
 
 #  os.removedirs(tmp_dir);
-#  if os.path.exists(oto_dir+'/oto.ini.ooo') :
-#    os.rename(oto_dir+'/oto.ini.ooo', oto_dir+'/oto.ini')
-
-#  os.rename(oto_bak, oto_in);
 
 except Exception, e:
   print e
-  sys.exit(1)
+  sys.exit(-1)
