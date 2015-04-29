@@ -1,0 +1,93 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import os
+import sys
+import shutil
+import codecs
+#import tempfile
+
+try:
+
+  parm_t = ''
+  target = ''
+  wavfile = ''
+
+#  tmp_dir = tempfile.mkdtemp()
+#  print "Temp. dir.: ", tmp_dir
+
+  oto_in = sys.argv[1]
+  oto_bak = oto_in+'.bbb'
+  oto_dir = '/'.join(oto_in.split('/')[0:-1])
+
+  if oto_dir == '': oto_dir = '.'
+
+#  os.rename(oto_in, oto_bak);
+#  if oto_in.split('/')[-1] == 'oto.ini' :
+  if os.path.exists(oto_dir+'/oto.ini') :
+    print "Error! The oto.ini file could be overwritten!!"
+#    sys.exit(1)
+
+#  print "Check oto.ini", oto_dir
+#  if os.path.exists(oto_dir+'/oto.ini') :
+#    os.rename(oto_dir+'/oto.ini', oto_dir+'/oto.ini.ooo')
+
+  f_in = codecs.open(oto_in, 'rb', encoding='UTF-16')
+
+  for line in f_in:
+    if line[0]=='#' or line[0:2]=='//' or line.find('=') < 0 : continue
+    if line[0]==';' : continue
+
+    wavfile = line.split('.wav=')[0]
+
+#    if len(wavfile) > 5 : continue   # skip non-Japanese
+#    print wavfile
+
+    if len(sys.argv) >2 :
+      search = sys.argv[2]
+#      if line.split('=')[-1].split(',')[0] == target :
+      if line.find(sys.argv[2]) >= 0 :
+        target = line.split('=')[-1].split(',')[0]
+        parm_t = line.split('=')[0]+'=test'+line[line.find(','):]
+#      	print parm_t
+
+    else:
+      if line[0]=='#' or line[0:2]=='//' or line.find('=') < 0:
+##        print line,
+        continue
+
+      target = line.split('=')[-1].split(',')[0]
+      parm_t = line.split('=')[0]+'=test'+line[line.find(','):]
+#      print parm_t,
+
+    if parm_t != '':
+      print parm_t,
+#      f_out = codecs.open('oto_test.ini', 'w', 'UTF-16_BE')
+      f_out = open(oto_dir+'/oto.ini', 'wb')
+      f_out.write(('\n'+parm_t+'\n').encode('UTF-16', errors='ignore'))
+      f_out.close();
+
+      command = 'java -jar xvsqexec.jar testing-s.xvsq wavtool-pl test1 '+oto_dir+'/testing.wav '+oto_dir+'/oto.ini'
+      os.system(command+' 2>1 /dev/null')
+#      os.system('java -jar xvsqexec.jar testing-s.xvsq wavtool-pl test1 '+oto_dir+'/testing.wav '+oto_dir+'/oto.ini')
+      songname = (wavfile+'_'+target+'-test.wav').replace(' ','_')
+      shutil.copy(oto_dir+'/testing.wav', oto_dir+'/'+songname)
+#      print "Command: ", command+' 2>1 /dev/null'
+      print "Song name: ", oto_dir+'/'+songname
+
+#      os.remove(oto_dir+'/oto.ini')
+
+#      os.system('mplayer -really-quiet testing.wav')
+#      os.system('iconv -f UTF-16 -t utf8 oto_test.ini')
+
+    parm_t = ''
+
+#  os.removedirs(tmp_dir);
+#  if os.path.exists(oto_dir+'/oto.ini.ooo') :
+#    os.rename(oto_dir+'/oto.ini.ooo', oto_dir+'/oto.ini')
+
+#  os.rename(oto_bak, oto_in);
+
+except Exception, e:
+  print e
+  sys.exit(1)
