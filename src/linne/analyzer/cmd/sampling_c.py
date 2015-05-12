@@ -81,12 +81,6 @@ def writeCsv(sampling,frames,output):
             row.append(10*log(sr[ifq, 0]/max(sr[:, 0])))
 
         vowel = int(classifier.predict(row)[0])
-#        vow_a = classifier.predict_proba(row)[0,1]
-#        vow_e = classifier.predict_proba(row)[0,2]
-#        vow_o = classifier.predict_proba(row)[0,3]
-#        vow_u = classifier.predict_proba(row)[0,4]
-#        vow_i = classifier.predict_proba(row)[0,5]
-#        vow_n = classifier.predict_proba(row)[0,6]
         
         curr_zcr = frames[i].zcr();
         curr_var = frames[i].spectrum().variance();
@@ -94,10 +88,6 @@ def writeCsv(sampling,frames,output):
         curr_ste = frames[i].energy(windowSize)[0];
         curr_ps  = score;
 
-#        maxFreqIdx = numpy.argmax(frames[i].spectrum());
-#        maxFreq = maxFreqIdx * (frames[i].spectrum().sampleRate / 2.0) / \
-#                    len(frames[i].spectrum());
-#
 #        if maxFreq > 750 : curr_ps = 0;
 #        if maxFreq < 350 : curr_ps = 0;
         if curr_var < 0.3 : curr_zcr = 0; curr_ps = 0;
@@ -146,7 +136,7 @@ filename = ".".join(token[0:len(token)-1])
 
 wav = AudioFile.open(target)
 
-classifier = joblib.load("linne.pkl")
+classifier = joblib.load("linne_zh.pkl")
 
 # Data set 2 - Using sliding Window
 
