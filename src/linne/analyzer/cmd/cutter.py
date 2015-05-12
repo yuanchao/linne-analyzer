@@ -9,8 +9,8 @@ import numpy
 from linne.analyzer.sound import Table as SoundTable
 from linne.analyzer.sound import Sound
 from linne.analyzer.sampling import SamplingFile
-from linne.analyzer.audacity import LabelFile
-from linne.analyzer.phonetic import Ipa
+#from linne.analyzer.audacity import LabelFile
+#from linne.analyzer.phonetic import Ipa
 
 class Filter:
     def __init__(self):
@@ -181,8 +181,77 @@ class Filter:
         except IndexError:
             print "[Error] Unexpected Index."
 
+    def find_vowel_id(self, target, duration = 0.):
+        VOWEL = {' ': -1,
+                 'a': 0,
+                 'i': 1,
+                 'o': 2,
+                 'e': 3,
+                 'u': 4,
+                 'n': 5,
+                 'g': 4}
+
+        try:
+            currIdx = self._index
+            endTime = self._sampling[currIdx]["Timestamp"]+duration
+
+            if duration==0. or endTime > self._maxTime:
+                endTime = self._maxTime
+
+            startIdx = self._index
+            endIdx = self._sampling._data.index(self._sampling.search(endTime))
+
+            vow_start = -1
+            vow_end = -1
+
+            for idx in range(currIdx+1, endIdx-3):
+                #print self._sampling[idx]["Timestamp"], self._sampling[idx]["Vowel ID"]
+                if vow_start == -1 and \
+                   self._sampling[idx]["Vowel ID"] == VOWEL[target] and \
+                   self._sampling[idx+1]["Vowel ID"] == VOWEL[target] and \
+                   self._sampling[idx+2]["Vowel ID"] == VOWEL[target]:
+                    vow_start = idx
+
+                elif not vow_start == -1 and \
+                   not self._sampling[idx]["Vowel ID"] == VOWEL[target] and \
+                   not self._sampling[idx+1]["Vowel ID"] == VOWEL[target]:
+                    vow_end = idx
+                    break
+
+            vow_len = vow_end - vow_start
+
+            if vow_start == currIdx+1:  # first vowel
+                vow_start = int(vow_start + 0.25 * vow_len)
+            else:
+                vow_start = int(vow_start + 0.20 * vow_len)
+
+            vow_end = int(vow_end - 0.25 * vow_len)
+
+            sv_max = -1
+            lowIdx = endIdx
+            for idx in range(vow_start, endIdx-3):
+                if self._sampling[idx]["Spectrum Variance"] > sv_max:
+                    sv_max = self._sampling[idx]["Spectrum Variance"]
+
+                if self._sampling[idx]["Spectrum Variance"] < 0.5 * sv_max:
+                    lowIdx = idx
+                    break
+
+            if lowIdx < vow_end and not target == 'u':
+                vow_end = lowIdx
+
+            start_time = int(self._sampling[vow_start]["Timestamp"] * 1000)
+            end_time = int(self._sampling[vow_end]["Timestamp"] * 1000)
+
+            return start_time, end_time
+
+        except IndexError:
+            print "[Error] Unexpected Index."
+
+
     def find_vowel(self, target, duration = 0.):
 
+        # 
         if target.find('b') >=0 or \
            target.find('d') >=0 or \
            target.find('f') >=0 or \
@@ -268,36 +337,63 @@ class Filter:
         m_prevoice = 0
         m_overlap = 0
 
+        #print target
+        #for phon in target.split('-'):
+        #    print phon
+        f_name = target+".wav"
+        target = target.split('-')[0]
+
         try:
             self.find_limits();
 
             self.skip_empty();
             m_offset = int( self._sampling[self._index]["Timestamp"] * 1000)
 
-            if target.find('w') ==0 and m_offset < 400 :
+            if target.find('A') == 0 or \
+               target.find('I') == 0 or \
+               target.find('O') == 0 or \
+               target.find('U') == 0 : 
+                self._index -= 10
+                self.find_max("ZCR diff.", 0.95);
+                m_offset = int( self._sampling[self._index]["Timestamp"] * 1000)
+
+            if target.lower().find('h') ==0 or \
+               target.lower().find('j') ==0 or \
+               target.lower().find('t') ==0 or \
+               target.find('s') ==0 or \
+               target.lower().find('ch') ==0 or \
+               target.lower().find('sh') ==0 or \
+               target.lower().find('ng') ==0 or \
+               target.lower().find('kw') ==0 or \
+               target.lower().find('zw') ==0 :
+                self._index -= 10
+                self.find_max("ZCR diff.", 0.75);
+                m_offset = int( self._sampling[self._index]["Timestamp"] * 1000)
+
+            if target.lower().find('w') ==0 and m_offset < 400 :
                 self._index = self._index + 50
                 self.find_rise("Spectrum Variance", 0.5, 0.5);
                 m_offset = int( self._sampling[self._index]["Timestamp"] * 1000)
 
-            if target.find('x') ==0:
-                self._index = 50
+            if target.lower().find('x') ==0:
+                self._index = max(self._index - 5, 0)
                 self.find_rise("ZCR", 0.05, 0.5);
-                m_offset = int( self._sampling[self._index]["Timestamp"] * 1000) - 20.
+                m_offset = int( self._sampling[self._index]["Timestamp"] * 1000)
 
-            if target.find('c') ==0 or \
-               target.find('h') ==0 or \
-               target.find('s') ==0 or \
-               target.find('j') ==0 or \
-               target.find('f') ==0 :
+               #target.lower().find('s') ==0 or 
+            if target.lower().find('c') ==0 or \
+               target.lower().find('h') ==0 or \
+               target.lower().find('j') ==0 or \
+               target.lower().find('f') ==0 :
 #                target.find('f') >=0 or \
 #                target.find('c') >=0 :
                 m_offset = m_offset - 20.
 
-            if target.find('d') ==0 or \
-               target.find('j') ==0 :
+            if target.lower().find('d') ==0 or \
+               target.lower().find('j') ==0 :
                 m_offset = m_offset - 5.
 
-            if target.find('f') ==0 :
+            if target.lower().find('f') ==0 :
                 self._index = self._index + 5
 
             #self.find_min("Spec. Var. diff.", 0.2);
@@ -306,6 +402,7 @@ class Filter:
             #self.find_max("ZCR diff.", 0.15);
             m_prevoice = int(self._sampling[self._index]["Timestamp"] * 1000 - m_offset)
 
+            self._index = self._index + 5
             ##self.find_max("Spectrum Variance", 0.1);
             ##self.find_min("Spectrum Variance", 0.1);
             #self.find_max("ZCR", 0.15);
@@ -318,16 +415,38 @@ class Filter:
             #m_max = self._sampling[self._index]["Spectrum Variance"]
             #self.find_fall("Spectrum Variance", 0.8*m_max, 0.5);
             #m_vowel = - int(self._sampling[self._index]["Timestamp"] * 1000 - m_offset)
+            if target.lower().find('uan') > 0 :
+                m_cons, m_vowel = self.find_vowel_id('e')
+            elif target.lower().find('an') > 0 :
+                m_cons, m_vowel = self.find_vowel_id('u')
+            elif target.lower().find('ang') > 0 :
+                m_cons, m_vowel = self.find_vowel_id('u')
+            elif target.lower().find('ing') > 0 :
+                m_cons, m_vowel = self.find_vowel_id('i')
+            elif target.lower().find('iong') > 0 :
+                m_cons, m_vowel = self.find_vowel_id('u')
+            else :
+                m_cons, m_vowel = self.find_vowel_id(target[-1].lower())
 
-            m_cons, m_vowel = self.find_vowel(target)
+            #m_cons, m_vowel = self.find_vowel(target)
 
             m_cons = m_cons - m_offset
             m_vowel = - int(m_vowel - m_offset)
 
-            print target+".wav"+"="+target+"," + \
+            #pho_file = open("phonetic_jpn.csv")
+            #phoneticTable = csv.DictReader(pho_file)
+
+            #print target
+            print f_name+"="+target.lower()+"," + \
                   ("%d,%d,%d,%d,%d" %  \
                    (m_offset, m_cons, m_vowel, \
                         m_prevoice, m_overlap))
+
+            #for row in phoneticTable:
+            #    if row['Roma'].lower() == target.lower():
+            #        print target+".wav"+"="+row['Kana']+"," + \
+            #              ("%d,%d,%d,%d,%d" %  \
+            #              (m_offset, m_cons, m_vowel, m_prevoice, m_overlap))
 
 
 #            for phonetic in phonetics:
