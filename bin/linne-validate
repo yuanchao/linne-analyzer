@@ -32,14 +32,9 @@ try:
 
   if oto_dir == '': oto_dir = '.'
 
-#  if not os.path.exists(oto_dir+'/oto.ini') :
   if not os.path.exists(oto_in) :
     print "Error! The "+oto_in.split('/')[-1]+" does not exist!!"
     sys.exit(-1)
-
-#  print "Check oto.ini", oto_dir
-#  if os.path.exists(oto_dir+'/oto.ini') :
-#    os.rename(oto_dir+'/oto.ini', oto_dir+'/oto.ini.ooo')
 
   f_in = codecs.open(oto_in, 'rb', encoding='UTF-16')
   x_in = codecs.open('test-s.xvsq', 'rb', encoding='UTF-8')
@@ -60,28 +55,28 @@ try:
         target = line.split('=')[-1].split(',')[0]  # filtered lyric to test
 
     else:
-#      if line[0]==';' or line[0]=='#' or line[0:2]=='//' or line.find('=')<0:
-#        continue
-
       target = line.split('=')[-1].split(',')[0]  # each lyric to test
-#      parm_t = line.split('=')[0]+'=test'+line[line.find(','):]
 
     if target != '':
       #print target,
 
-      x_out = open('testing.xvsq', 'wb')
+      #x_in = codecs.open('test-s.xvsq', 'rb', encoding='UTF-8')
+      x_out = open('testing.xvsq', 'w')
+      x_in.seek(0)
       xvsq_in = x_in.read().replace('TESTLYRIC', target)
-      x_out.write(xvsq_in.encode('UTF-8', errors='ignore'))
-      x_out.close();
 
-      command = 'java -jar xvsqexec.jar testing.xvsq wavtool-pl test1 '+oto_dir+'/testing.wav '+oto_dir+'/oto.ini'
+      x_out.write(xvsq_in.encode('UTF-8', errors='ignore'))
+      x_out.close()
+
+      command = 'java -jar xvsqexec.jar testing.xvsq wavtool-pl test1 /tmp/testing.wav '+oto_dir+'/oto.ini'
       #print command
       os.system(command+' 2>1 /dev/null')
-      songname = (wavfile+'_'+target+'-test.wav').replace(' ','_')
-      shutil.copy(oto_dir+'/testing.wav', oto_dir+'/'+songname)
-      print "Song name: ", oto_dir+'/'+songname
+      songname = (wavfile+'_'+target+'-test.mp3').replace(' ','_')
 
-#        os.system('mplayer -really-quiet testing.wav')
+      os.system('sox /tmp/testing.wav '+oto_dir+'/testing/'+songname+' trim 2 -0')
+      print "Song name: ", oto_dir+'/testing/'+songname
+
+      #os.system('mplayer -really-quiet '+oto_dir+'/testing/'+songname+' 2>1 /dev/null')
 
     target = ''
 
