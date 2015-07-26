@@ -1,0 +1,14 @@
+#!/bin/bash
+
+BASEDIR=$(dirname "$(which "$0")")
+PROJDIR=$(dirname "$BASEDIR" )
+
+export PYTHONPATH=$PROJDIR/src:$PROJDIR/src/pymir:$PYTHONPATH
+
+if [ $# -ne 1 ]
+then
+    echo "Usage: linne-sampling wavfile"
+    exit 0
+fi
+
+python "$PROJDIR/src/linne/analyzer/cmd/sampling_c.py" $1
