@@ -63,11 +63,14 @@ class Filter:
             endIdx = self._sampling._data.index(self._sampling.search(endTime))
 
             for idx in range(currIdx, endIdx-1):
-                if self._sampling[idx][varName] > maxVar:
+                if self._sampling[idx][varName] > maxVar :
                     maxVar = self._sampling[idx][varName]
                     self._index = idx
+
+#                if self._sampling[idx][varName] < -10*maxVar :
+#                    break
                     
-#            print "Max ", varName, " at time, value: ", self._sampling[self._index]["Timestamp"], self._sampling[self._index][varName]
+#                print "Max ", varName, " at time, value: ", self._sampling[self._index]["Timestamp"], self._sampling[self._index][varName]
 
         except IndexError:
             print "[Error] Unexpected Index."
@@ -185,8 +188,10 @@ class Filter:
                  'a': 0,
                  'o': 1,
                  'e': 2,
+                 '2': 2,
                  'r': 2,
                  'ei': 3,
+                 '3': 3,
                  'i': 4,
                  'u': 5,
                  'v': 6,
@@ -238,7 +243,10 @@ class Filter:
                 if self._sampling[idx]["Spectrum Variance"] > sv_max:
                     sv_max = self._sampling[idx]["Spectrum Variance"]
 
-                if self._sampling[idx]["Spectrum Variance"] < 0.5 * sv_max:
+                if target == 'n' and self._sampling[idx]["Spectrum Variance"] < 0.2 * sv_max :
+                    lowIdx = idx
+                    break
+                elif self._sampling[idx]["Spectrum Variance"] < 0.5 * sv_max:
                     lowIdx = idx
                     break
 
@@ -249,9 +257,9 @@ class Filter:
             vow_len = vow_end - vow_start
 
             if vow_start == currIdx+1:  # first vowel
-                vow_start = int(vow_start + 0.15 * vow_len)
+                vow_start = int(vow_start + 0.20 * vow_len)
             else:
-                vow_start = int(vow_start + 0.10 * vow_len)
+                vow_start = int(vow_start + 0.15 * vow_len)
 
             vow_end = int(vow_end - 0.15 * vow_len)
 
@@ -373,7 +381,7 @@ class Filter:
         n_target = len(targets.split('-'))
 
         try:
-            # frame size is 30 ms / 4, typical blank: ~800 ms
+            # frame size is 30 ms / 4, typical blank: ~500 ms
             self._index = 50
 
             self.find_limits();
@@ -384,11 +392,18 @@ class Filter:
 
             self._index = 50
             #self._index = 100
-            self.skip_empty(0.5);
+            self.skip_empty(0.25);
             #m_offset = int(self._sampling[self._index]["Timestamp"] * 1000)
 
             #self.find_limits(0.27); # typical sound length is ~256 ms
             #self._index -= 5
+
+            if target.lower().find('ceng') == 0 :
+                self._index -= 5
+            if target.lower().find('f') == 0 :
+                self._index -= 5
+            if target.lower().find('h') == 0 :
+                self._index -= 5
 
 #            if target.lower().find('bei') == 0 :
 #                self._index -= 20
@@ -402,6 +417,7 @@ class Filter:
             #print self._index
             #self.find_rise("ZCR", 0.05, 0.5);
             self.find_max("Spec. Var. diff.", 0.1);
+            #self.find_peak("Spec. Var. diff.", 0.1);
             #self.find_rise("Spectrum Variance", 0.2*self._maxSV, 0.5);
 
             # set a reference point on pre-utterance
@@ -425,7 +441,8 @@ class Filter:
 
             # find consanent and vowel
 
-            for m_i in range(n_target) :
+            #for m_i in range(n_target) :
+            for m_i in range(1) :
 
                 #self.find_rise("Spectrum Variance", 0.7*self._maxSV, 0.5);
                 target_pre = ""
@@ -444,93 +461,148 @@ class Filter:
                     if abs(self._index - (tmp_index + m_len_idx * m_i)) < 10 :
                         m_prevoice = int(self._sampling[self._index]["Timestamp"] * 1000 - m_offset)
                 
-                if target.lower().find('gong') == 0 :
-                    m_cons, m_vowel = self.find_vowel_id('n')
-                elif target.lower().find('jong') == 0 :
+                if target.lower().find('dong') == 0 :
                     m_cons, m_vowel = self.find_vowel_id('u')
                 elif target.lower().find('kong') == 0 :
-                    m_cons, m_vowel = self.find_vowel_id('n')
-                elif target.lower().find('jiong') == 0 :
                     m_cons, m_vowel = self.find_vowel_id('u')
-                elif target.lower().find('hong') == 0 :
-                    m_cons, m_vowel = self.find_vowel_id('n')
-                elif target.lower().find('long') == 0 :
-                    m_cons, m_vowel = self.find_vowel_id('n')
-                elif target.lower().find('rong') == 0 :
-                    m_cons, m_vowel = self.find_vowel_id('n')
-                elif target.lower().find('song') == 0 :
-                    m_cons, m_vowel = self.find_vowel_id('n')
-                elif target.lower().find('tong') == 0 :
-                    m_cons, m_vowel = self.find_vowel_id('u')
-                elif target.lower().find('zhong') == 0 :
-                    m_cons, m_vowel = self.find_vowel_id('e')
-                elif target.lower().find('zong') == 0 :
+                elif target.lower().find('xiong') == 0 :
                     m_cons, m_vowel = self.find_vowel_id('e')
                 elif target.lower().find('ong') > 0 :
-                    m_cons, m_vowel = self.find_vowel_id('o')
+                    m_cons, m_vowel = self.find_vowel_id('n')
 
                 elif target.lower().find('chuang') == 0 :
                     m_cons, m_vowel = self.find_vowel_id('e')
                 elif target.lower().find('guang') == 0 :
                     m_cons, m_vowel = self.find_vowel_id('a')
                     m_cons, m_vowel = self.find_vowel_id('e')
-                elif target.lower().find('guan') == 0 :
-                    m_cons, m_vowel = self.find_vowel_id('a')
-                    m_cons, m_vowel = self.find_vowel_id('u')
+                    m_cons, m_vowel = self.find_vowel_id('ei')
+                elif target.lower().find('yuan') == 0 :
+                    self._index += 5
+                    m_cons, m_vowel = self.find_vowel_id('n')
+                elif target.lower().find('xuan') == 0 :
+                    self._index += 10
+                    m_cons, m_vowel = self.find_vowel_id('n')
+                elif target.lower().find('juan') == 0 :
+                    m_cons, m_vowel = self.find_vowel_id('n')
                 elif target.lower().find('huan') == 0 :
+                    self._index += 15
+                    m_cons, m_vowel = self.find_vowel_id('n')
+                elif target.lower().find('zang') == 0 :
+                    m_cons, m_vowel = self.find_vowel_id('e')
+                elif target.lower().find('yang') == 0 :
+                    self._index += 10
+                    m_cons, m_vowel = self.find_vowel_id('e')
+                elif target.lower().find('qiang') == 0 :
+                    m_cons, m_vowel = self.find_vowel_id('e')
+                elif target.lower().find('sang') == 0 :
+                    self._index += 10
                     m_cons, m_vowel = self.find_vowel_id('a')
+                elif target.lower().find('pang') == 0 :
                     m_cons, m_vowel = self.find_vowel_id('e')
                 elif target.lower().find('mang') == 0 :
-                    m_cons, m_vowel = self.find_vowel_id('-')
-                elif target.lower().find('yang') == 0 :
-                    m_cons, m_vowel = self.find_vowel_id('e')
-                elif target.lower().find('geng') == 0 :
-                    m_cons, m_vowel = self.find_vowel_id('o')
-                elif target.lower().find('deng') == 0 :
-                    m_cons, m_vowel = self.find_vowel_id('-')
-                elif target.lower().find('qing') == 0 :
-                    m_cons, m_vowel = self.find_vowel_id('-')
-                elif target.lower().find('qiang') == 0 :
-                    m_cons, m_vowel = self.find_vowel_id('-')
-                elif target.lower().find('bing') == 0 :
                     m_cons, m_vowel = self.find_vowel_id('n')
-                elif target.lower().find('jing') == 0 :
-                    m_cons, m_vowel = self.find_vowel_id('e')
-                elif target.lower().find('bin') == 0 :
-                    m_cons, m_vowel = self.find_vowel_id('u')
-                elif target.lower().find('lin') == 0 :
-                    m_cons, m_vowel = self.find_vowel_id('u')
-                elif target.lower().find('yin') == 0 : # both yin & ying
-                    m_cons, m_vowel = self.find_vowel_id('e')
+                    m_vowel -= 70
+                elif target.lower().find('nang') == 0 :
+                    m_cons, m_vowel = self.find_vowel_id('n')
+                    m_vowel -= 50
                 elif target.lower().find('lang') == 0 :
+                    m_cons, m_vowel = self.find_vowel_id('a')
+                    m_cons, m_vowel = self.find_vowel_id('o')
                     m_cons, m_vowel = self.find_vowel_id('e')
-                elif target.lower().find('leng') == 0 :
+                    m_vowel += 50
+                elif target.lower().find('kang') == 0 :
+                    self._index += 10
                     m_cons, m_vowel = self.find_vowel_id('e')
-                elif target.lower().find('reng') == 0 :
+                elif target.lower().find('fang') == 0 :
+                    self._index += 10
                     m_cons, m_vowel = self.find_vowel_id('e')
-                    self._index += 50
+                    m_vowel -= 70
+                elif target.lower().find('bang') == 0 :
+                    self._index += 5
                     m_cons, m_vowel = self.find_vowel_id('e')
+                    m_vowel += 50
+                elif target.lower().find('ang') > 0 :
+                    m_cons, m_vowel = self.find_vowel_id('n')
+
+                elif target.lower().find('seng') == 0 :
+                    m_cons, m_vowel = self.find_vowel_id('u')
+                elif target.lower().find('peng') == 0 :
+                    m_cons, m_vowel = self.find_vowel_id('n')
+                    m_cons -= 50
+                    m_vowel -= 90
+                elif target.lower().find('deng') == 0 :
+                    m_cons, m_vowel = self.find_vowel_id('u')
+                elif target.lower().find('beng') == 0 :
+                    m_cons, m_vowel = self.find_vowel_id('n')
+                    m_cons -= 30
+                    m_vowel -= 90
+                elif target.lower().find('eng') > 0 :
+                    m_cons, m_vowel = self.find_vowel_id('n')
+
+                elif target.lower().find('ying') == 0 :
+                    m_cons, m_vowel = self.find_vowel_id('n')
+                elif target.lower().find('ping') == 0 :
+                    m_cons, m_vowel = self.find_vowel_id('o')
+                elif target.lower().find('ding') == 0 :
+                    m_cons, m_vowel = self.find_vowel_id('o')
+                elif target.lower().find('bing') == 0 :
+                    self._index += 15
+                    m_cons, m_vowel = self.find_vowel_id('e')
+                elif target.lower().find('ing') > 0 :
+                    m_cons, m_vowel = self.find_vowel_id('u')
                 elif target.lower().find('ng') > 0 :
                     m_cons, m_vowel = self.find_vowel_id('n')
 
-                elif target.lower().find('han') == 0 :
+                elif target.lower().find('yin') == 0 :
                     m_cons, m_vowel = self.find_vowel_id('e')
-                elif target.lower().find('bin') == 0 :
+                elif target.lower().find('xin') == 0 :
                     m_cons, m_vowel = self.find_vowel_id('u')
-                elif target.lower().find('hun') == 0 : # also chun
+                elif target.lower().find('qin') == 0 :
                     m_cons, m_vowel = self.find_vowel_id('u')
-                elif target.lower().find('pin') == 0 :
+                elif target.lower().find('nin') == 0 :
+                    self._index += 15
                     m_cons, m_vowel = self.find_vowel_id('u')
+                elif target.lower().find('min') == 0 :
+                    m_cons, m_vowel = self.find_vowel_id('o')
                 elif target.lower().find('jin') == 0 :
+                    m_cons, m_vowel = self.find_vowel_id('o')
+                elif target.lower().find('in') > 0 :
+                    m_cons, m_vowel = self.find_vowel_id('n')
+
+                elif target.lower().find('zan') == 0 :
+                    m_cons, m_vowel = self.find_vowel_id('e')
+                elif target.lower().find('yan') == 0 :
+                    self._index += 10
+                    m_cons, m_vowel = self.find_vowel_id('-')
+                elif target.lower().find('san') == 0 :
+                    m_cons, m_vowel = self.find_vowel_id('3') # ei
+                elif target.lower().find('kan') == 0 :
                     m_cons, m_vowel = self.find_vowel_id('u')
-                elif target.lower().find('gun') == 0 :
+                elif target.lower().find('gan') == 0 :
+                    self._index += 10
                     m_cons, m_vowel = self.find_vowel_id('u')
-                elif target.lower().find('jun') == 0 :
+                elif target.lower().find('fan') == 0 :
+                    self._index += 10
+                    m_cons, m_vowel = self.find_vowel_id('e')
+                elif target.lower().find('can') == 0 :
+                    self._index -= 20
+                    m_cons, m_vowel = self.find_vowel_id('n')
+                elif target.lower().find('an') > 0 :
+                    m_cons, m_vowel = self.find_vowel_id('n')
+
+                elif target.lower().find('ken') == 0 :
                     m_cons, m_vowel = self.find_vowel_id('u')
-                elif target.lower().find('lun') == 0 :
-                    m_cons, m_vowel = self.find_vowel_id('u')
-                elif target.lower().find('men') == 0 :
-                    m_cons, m_vowel = self.find_vowel_id('u')
+                elif target.lower().find('hen') == 0 :
+                    self._index += 10
+                    m_cons, m_vowel = self.find_vowel_id('-')
+                elif target.lower().find('fen') == 0 :
+                    self._index += 10
+                    m_cons, m_vowel = self.find_vowel_id('-')
+                elif target.lower().find('en') > 0 :
+                    m_cons, m_vowel = self.find_vowel_id('n')
+
+                elif target.lower().find('un') > 0 :
+                    m_cons, m_vowel = self.find_vowel_id('n')
                     
                 #elif target.lower().find('bou') == 0 :
                 #    m_cons, m_vowel = self.find_vowel_id('u')
@@ -702,8 +774,13 @@ class Filter:
                 #print "Consenant, Vowel: ", m_cons, m_vowel
                 m_cons = m_cons - m_offset
                     
+                # for vowel detection failure
                 if (m_vowel - m_offset - m_prevoice) > m_length :
                     m_vowel = m_offset + m_prevoice + m_length * 0.95
+                    print '!',
+                if (m_cons - m_offset - m_prevoice) > m_length :
+                    m_cons = m_offset + m_prevoice + m_length * 0.75
+                    print '!!',
                     
                 m_vowel = - int(m_vowel - m_offset)
                 
