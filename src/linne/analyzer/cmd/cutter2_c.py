@@ -480,10 +480,23 @@ class Filter:
                     m_cons, m_vowel = self.find_vowel_id('u')
                 elif target.lower().find('xiong') == 0 :
                     m_cons, m_vowel = self.find_vowel_id('e')
+                elif target.lower().find('chong') == 0 :
+                    m_cons, m_vowel = self.find_vowel_id('-')
+                    #print m_cons, m_vowel
+                    #m_cons -= 100
+                    #m_vowel -= 100
                 elif target.lower().find('ong') > 0 :
                     m_cons, m_vowel = self.find_vowel_id('n')
 
                 elif target.lower().find('chuang') == 0 :
+                    m_cons, m_vowel = self.find_vowel_id('e')
+                elif target.lower().find('zhang') == 0 :
+                    m_cons, m_vowel = self.find_vowel_id('e')
+                elif target.lower().find('chang') == 0 :
+                    self._index += 5
+                    m_cons, m_vowel = self.find_vowel_id('e')
+                elif target.lower().find('cheng') == 0 :
+                    self._index += 10
                     m_cons, m_vowel = self.find_vowel_id('e')
                 elif target.lower().find('guang') == 0 :
                     m_cons, m_vowel = self.find_vowel_id('a')
@@ -495,6 +508,8 @@ class Filter:
                 elif target.lower().find('xuan') == 0 :
                     self._index += 10
                     m_cons, m_vowel = self.find_vowel_id('n')
+                elif target.lower().find('lvan') == 0 :
+                    m_cons, m_vowel = self.find_vowel_id('u')
                 elif target.lower().find('juan') == 0 :
                     m_cons, m_vowel = self.find_vowel_id('n')
                 elif target.lower().find('huan') == 0 :
@@ -566,8 +581,8 @@ class Filter:
                 elif target.lower().find('ng') > 0 :
                     m_cons, m_vowel = self.find_vowel_id('n')
 
-                elif target.lower().find('yin') == 0 :
-                    m_cons, m_vowel = self.find_vowel_id('e')
+                #elif target.lower().find('yin') == 0 :
+                #    m_cons, m_vowel = self.find_vowel_id('n')
                 elif target.lower().find('xin') == 0 :
                     m_cons, m_vowel = self.find_vowel_id('u')
                 elif target.lower().find('qin') == 0 :
@@ -582,6 +597,8 @@ class Filter:
                 elif target.lower().find('in') > 0 :
                     m_cons, m_vowel = self.find_vowel_id('n')
 
+                elif target.lower().find('zhan') == 0 :
+                    m_cons, m_vowel = self.find_vowel_id('-')
                 elif target.lower().find('zan') == 0 :
                     m_cons, m_vowel = self.find_vowel_id('e')
                 elif target.lower().find('yan') == 0 :
@@ -661,28 +678,14 @@ class Filter:
                     #self._index += 5
                     m_cons, m_vowel = self.find_vowel_id('e')
 
-                elif target.lower().find('ju') == 0 :
-                    m_cons, m_vowel = self.find_vowel_id('v')
-                elif target.lower().find('mu') == 0 :
-                    m_cons, m_vowel = self.find_vowel_id('o')
-                elif target.lower().find('xu') == 0 :
-                    m_cons, m_vowel = self.find_vowel_id('v')
-                elif target.lower().find('lvn') == 0 :
-                    m_cons, m_vowel = self.find_vowel_id('u')
-                elif target.lower().find('lu') == 0 :
-                    self._index += 15
-                    m_cons, m_vowel = self.find_vowel_id('u')
-                elif target.lower().find('fu') == 0 :
-                    self._index -= 15
-                    m_cons, m_vowel = self.find_vowel_id('u')
-                elif target.lower().find('qu') == 0 :
-                    m_cons, m_vowel = self.find_vowel_id('v')
-                elif target.lower().find('yu') == 0 :
-                    m_cons, m_vowel = self.find_vowel_id('v')
-                    
                 elif target.lower().find('er') > 0 :
                     m_cons, m_vowel = self.find_vowel_id('e')
                     
+                elif target.lower().find('zhua') == 0 :
+                    m_cons, m_vowel = self.find_vowel_id('e')
+                elif target.lower().find('shua') == 0 :
+                    m_cons, m_vowel = self.find_vowel_id('-')
+
                 elif target.lower().find('chuai') == 0 :
                     m_cons, m_vowel = self.find_vowel_id('i')
                 elif target.lower().find('shuai') == 0 :
@@ -849,10 +852,47 @@ class Filter:
                 elif target.lower().find('ue') > 0 :
                     m_cons, m_vowel = self.find_vowel_id('3')
                     
-                elif target.lower().find('si') == 0 :
+                elif target.lower().find('ju') == 0 :
+                    m_cons, m_vowel = self.find_vowel_id('v')
+                elif target.lower().find('mu') == 0 :
+                    m_cons, m_vowel = self.find_vowel_id('o')
+                elif target.lower().find('xu') == 0 :
+                    m_cons, m_vowel = self.find_vowel_id('v')
+                elif target.lower().find('zu') == 0 :
+                    m_cons, m_vowel = self.find_vowel_id('u')
+                    m_vowel -= 100
+                elif target.lower().find('lvn') == 0 :
+                    m_cons, m_vowel = self.find_vowel_id('u')
+                elif target.lower().find('lu') == 0 :
+                    self._index += 15
+                    m_cons, m_vowel = self.find_vowel_id('u')
+                elif target.lower().find('fu') == 0 :
+                    self._index -= 15
+                    m_cons, m_vowel = self.find_vowel_id('u')
+                elif target.lower().find('qu') == 0 :
+                    m_cons, m_vowel = self.find_vowel_id('v')
+                elif target.lower().find('yu') == 0 :
+                    m_cons, m_vowel = self.find_vowel_id('v')
+                    
+                elif target.lower().find('wo') == 0 :
+                    m_cons, m_vowel = self.find_vowel_id('u')
+                elif target.lower().find('wa') == 0 :
                     m_cons, m_vowel = self.find_vowel_id('e')
+
+                elif target.lower().find('ri') == 0 :
+                    m_cons, m_vowel = self.find_vowel_id('e')
+                    #m_cons -= 100
+                    m_vowel -= 100
+                elif target.lower().find('si') == 0 :
+                    self._index -=10
+                    m_cons, m_vowel = self.find_vowel_id('-')
+                    m_cons -= 100
+                    m_vowel -= 100
                 elif target.lower().find('ci') == 0 :
                     m_cons, m_vowel = self.find_vowel_id('-')
+                elif target.lower().find('zhi') == 0 :
+                    m_cons, m_vowel = self.find_vowel_id('-')
+                    m_vowel -= 100
                 else :
                     m_cons, m_vowel = self.find_vowel_id(target[-1].lower())
                 #print target
