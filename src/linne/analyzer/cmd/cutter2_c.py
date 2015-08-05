@@ -250,7 +250,8 @@ class Filter:
                     lowIdx = idx
                     break
 
-            if lowIdx < vow_end : #and not target == 'u':
+            #if lowIdx < vow_end : #and not target == 'u':
+            if (lowIdx - vow_start) > 20 and lowIdx < vow_end : #and not target == 'u':
                 vow_end = lowIdx
 
             # add some buffer area
@@ -428,17 +429,23 @@ class Filter:
             if target.lower().find('cuan') == 0 :
                 self._index += 2
 
-            m_prevoice = int(self._sampling[self._index]["Timestamp"] * 1000 - m_offset)
-            self.find_max("Spec. Var. diff.", 0.2);
-
             if target.lower().find('bei') == 0 :
                 self._index -= 5
             if target.lower().find('zei') == 0 :
                 self._index -= 5
+            if target.lower().find('zhi') == 0 :
+                self._index += 5
             if target.lower().find('hou') == 0 :
                 self._index -= 10
             if target.lower().find('suo') == 0 :
                 self._index += 10
+            if target.lower().find('shun') == 0 :
+                self._index += 15
+            if target.lower().find('xiang') == 0 :
+                self._index += 10
+
+            m_prevoice = int(self._sampling[self._index]["Timestamp"] * 1000 - m_offset)
+            self.find_max("Spec. Var. diff.", 0.2);
 
             if self._index - tmp_index < 10 :
                 m_prevoice = int(self._sampling[self._index]["Timestamp"] * 1000 - m_offset)
@@ -520,6 +527,10 @@ class Filter:
                 elif target.lower().find('yang') == 0 :
                     self._index += 10
                     m_cons, m_vowel = self.find_vowel_id('e')
+                elif target.lower().find('xiang') == 0 :
+                    self._index += 20
+                    m_cons, m_vowel = self.find_vowel_id('e')
+                    print m_cons, m_vowel
                 elif target.lower().find('qiang') == 0 :
                     m_cons, m_vowel = self.find_vowel_id('e')
                 elif target.lower().find('sang') == 0 :
@@ -681,15 +692,18 @@ class Filter:
                 elif target.lower().find('er') > 0 :
                     m_cons, m_vowel = self.find_vowel_id('e')
                     
+                elif target.lower().find('chuai') == 0 :
+                    m_cons, m_vowel = self.find_vowel_id('i')
+                elif target.lower().find('shuai') == 0 :
+                    self._index -= 10
+                    m_cons, m_vowel = self.find_vowel_id('i')
+                    print m_cons, m_vowel
+
                 elif target.lower().find('zhua') == 0 :
                     m_cons, m_vowel = self.find_vowel_id('e')
                 elif target.lower().find('shua') == 0 :
                     m_cons, m_vowel = self.find_vowel_id('-')
 
-                elif target.lower().find('chuai') == 0 :
-                    m_cons, m_vowel = self.find_vowel_id('i')
-                elif target.lower().find('shuai') == 0 :
-                    m_cons, m_vowel = self.find_vowel_id('i')
                 elif target.lower().find('chai') == 0 :
                     self._index -= 20
                     m_cons, m_vowel = self.find_vowel_id('-')
@@ -846,7 +860,7 @@ class Filter:
                     self._index -=10
                     m_cons, m_vowel = self.find_vowel_id('e')
                 elif target.lower().find('que') == 0 :
-                    m_cons, m_vowel = self.find_vowel_id('e')
+                    m_cons, m_vowel = self.find_vowel_id('a')
                 elif target.lower().find('yue') == 0 :
                     m_cons, m_vowel = self.find_vowel_id('e')
                 elif target.lower().find('ue') > 0 :
@@ -890,9 +904,14 @@ class Filter:
                     m_vowel -= 100
                 elif target.lower().find('ci') == 0 :
                     m_cons, m_vowel = self.find_vowel_id('-')
+
+                elif target.lower().find('chi') == 0 :
+                    m_cons, m_vowel = self.find_vowel_id('-')
+                elif target.lower().find('shi') == 0 :
+                    m_cons, m_vowel = self.find_vowel_id('-')
                 elif target.lower().find('zhi') == 0 :
                     m_cons, m_vowel = self.find_vowel_id('-')
-                    m_vowel -= 100
+                    m_vowel -= 50
                 else :
                     m_cons, m_vowel = self.find_vowel_id(target[-1].lower())
                 #print target
@@ -900,11 +919,11 @@ class Filter:
 
                 # for vowel detection failure
                 if (m_vowel - m_offset - m_prevoice) > m_length :
-                    m_vowel = m_offset + m_prevoice + m_length * 0.95
-                    print '!',
+                    m_vowel = m_offset + m_prevoice + m_length * 0.85
+                    #print '!',
                 if (m_cons - m_offset - m_prevoice) > m_length :
-                    m_cons = m_offset + m_prevoice + m_length * 0.75
-                    print '!!',
+                    m_cons = m_offset + m_prevoice + m_length * 0.55
+                    #print '!!',
                                         
                 #print "Consenant, Vowel: ", m_cons, m_vowel
                 m_cons = m_cons - m_offset
