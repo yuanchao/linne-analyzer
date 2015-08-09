@@ -68,12 +68,12 @@ try:
       x_out.write(xvsq_in.encode('UTF-8', errors='ignore'))
       x_out.close()
 
-      command = 'java -jar xvsqexec.jar testing.xvsq wavtool-pl test1 /tmp/testing.wav '+oto_dir+'/oto.ini'
+      command = 'java -jar xvsqexec.jar testing.xvsq wavtool-pl test1 /tmp/testing.wav '+oto_in
       #print command
       os.system(command+' 2>1 /dev/null')
-      songname = (wavfile+'_'+target+'-test.mp3').replace(' ','_')
+      songname = (wavfile+'_'+target+'-test.mp3').replace(' ','_').encode('UTF-8', errors='ignore')
 
-      os.system('sox /tmp/testing.wav '+oto_dir+'/testing/'+songname+' trim 2 -0')
+      os.system('sox /tmp/testing.wav '+oto_dir+'/testing/'+songname+' trim 1.5 -0')
       print "Song name: ", oto_dir+'/testing/'+songname
 
       #os.system('mplayer -really-quiet '+oto_dir+'/testing/'+songname+' 2>1 /dev/null')
