@@ -1,0 +1,110 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import os
+import sys
+import shutil
+import codecs
+#import tempfile
+
+'''
+Usage:
+
+cv2vcv oto_dir/oto.ini input.ust
+
+'''
+
+try:
+
+  parm_t = ''
+  target = ''
+  wavfile = ''
+
+  if len(sys.argv) <= 2:
+    print "Usage: "+sys.argv[0].split('/')[-1]+" oto_dir/oto.ini input.ust\n"
+    sys.exit(0)
+
+  oto_in = sys.argv[1]
+  oto_dir = '/'.join(oto_in.split('/')[0:-1])
+
+  ust_in = sys.argv[2]
+  ust_out = ust_in.split('.ust')[0]+'-vcv.ust'
+
+  if oto_dir == '': oto_dir = '.'
+
+  if not os.path.exists(oto_in) :
+    print "Error! The "+oto_in.split('/')[-1]+" does not exist!!"
+    sys.exit(-1)
+
+#  f_in = codecs.open(oto_in, 'rb', encoding='UTF-16')
+#  x_out = codecs.open('testing.xvsq', 'wb', encoding='UTF-8')
+  f_in = open(oto_in, 'rb')
+  x_in = open(ust_in, 'rb')
+  x_out = open(ust_out, 'wb')
+
+  m_idx = -1
+  m_lyric = ''
+  m_pre_vowel = ''
+  lyric_set = set()
+
+  # collect all available lyrics
+  for oto_line in f_in:
+    # skip commented lines
+    if oto_line[0]=='#' or oto_line[0]=='!' or oto_line[0]==';' : continue
+
+    m_lyric = oto_line.split('wav=')[-1].split(',')[0]
+    lyric_set.add(m_lyric)
+
+  # modify CV into VCV if possible
+  for ust_line in x_in:
+
+    #if ust_line[0:2] != '[#' or ust_line[0:5]!='Lyric' : continue
+    if ust_line[0:5] == '[#VER' or ust_line[0:5] == '[#SET' or \
+       ust_line[0:5] == '[#TRA' :
+      x_out.write(ust_line)
+      continue
+
+    #print ust_line
+    if ust_line[0:2] == '[#' :
+      idx = int(ust_line[2:6])
+      if abs(m_idx - idx) > 2 :
+        print "Lyrics missing..."
+      m_idx = idx
+
+    if ust_line[0:5]=='Lyric' :
+      m_lyric = ust_line.strip()[6:]
+
+      #if m_lyric[0] == 'R' or m_lyric[0:2] == 'RR' or m_lyric[0:2] == 'br' :
+      #  m_pre_vowel = ''
+
+      if m_pre_vowel != '':
+        m_vcv = m_pre_vowel+' '+m_lyric
+      else :
+        m_vcv = m_lyric
+
+      if not (m_vcv in lyric_set) :
+        if (m_vcv[1:] in lyric_set) :
+          m_vcv = m_vcv[1:]
+        else :
+          m_vcv = m_lyric
+
+      if m_lyric[0] == 'R' or m_lyric[0:2] == 'RR' or m_lyric[0:2] == 'br' :
+        m_vcv = m_lyric
+
+      m_out = str(m_idx)+' Lyric='+m_vcv
+      #print m_out
+      x_out.write('Lyric='+m_vcv+ust_line[-2:])
+
+      m_pre_vowel = m_lyric.strip()[-2:]
+      if m_lyric[0] == 'R' or m_lyric[0:2] == 'RR' or m_lyric[0:2] == 'br' :
+        m_pre_vowel = ''
+
+      #print
+    else:
+      x_out.write(ust_line)
+
+#  os.removedirs(tmp_dir);
+
+except Exception, e:
+  print e
+  sys.exit(-1)
