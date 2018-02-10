@@ -461,8 +461,8 @@ class Filter:
 
             # find consanent and vowel
 
-            #for m_i in range(n_target) :
-            for m_i in range(1) :
+            for m_i in range(n_target) :
+            #for m_i in range(1) :
 
                 #self.find_rise("Spectrum Variance", 0.7*self._maxSV, 0.5);
                 target_pre = ""
@@ -935,7 +935,7 @@ class Filter:
 
                 #print target
                 if m_i > 0 :
-                    target = target_pre[-1]+'_'+target
+                    target = target_pre[-1]+' '+target
                 print f_name+"="+target.lower()+"," + \
                     ("%d,%d,%d,%d,%d" %  \
                          (m_offset, m_cons, m_vowel, \
@@ -944,11 +944,14 @@ class Filter:
                 m_target = target.replace("lv", "lü")
                 m_target = target.replace("nv", "nü")
 
-                #for row in pho_tab:
-                #    if row['漢語拼音方案'].lower() == m_target:
-                #        print target+".wav"+"="+row['國語注音符號第一式']+"," + \
-                    #              ("%d,%d,%d,%d,%d" %  \
-                    #              (m_offset, m_cons, m_vowel, m_prevoice, m_overlap))
+                pho_file.seek(0)
+                for row in pho_tab:
+                    if row['漢語拼音方案'].lower() == m_target.split(' ')[-1]:
+                        a_target = m_target.replace(row['漢語拼音方案'].lower(),
+                                                    row['國語注音符號第一式'])
+                        print f_name+".wav"+"="+a_target+"," + \
+                                  ("%d,%d,%d,%d,%d" %  \
+                                  (m_offset, m_cons, m_vowel, m_prevoice, m_overlap))
 
         except IndexError:
             print "[Error] Unexpected termination. Not all phonetic is found."
